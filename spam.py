@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Static, Button, Input
-from textual.containers import Horizontal, Static as Container
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual import work
 from datetime import datetime
@@ -231,4 +231,3 @@ class DCLSpamApp(App):
 
 if __name__ == "__main__":
     DCLSpamApp().run()
-    
