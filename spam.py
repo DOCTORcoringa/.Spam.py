@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Static, Button, Input
-from textual.containers import Horizontal
+from textual.containers import Grid
 from textual.reactive import reactive
 from textual import work
 from datetime import datetime
@@ -96,8 +96,7 @@ class DCLSpamApp(App):
         padding: 1;
         border: round green;
         layout: grid;
-        grid-columns: 3;
-        grid-rows: auto;
+        grid-size: 3;
         grid-gutter: 1 2;
         justify-items: center;
     }
@@ -151,7 +150,7 @@ class DCLSpamApp(App):
 
     def compose(self) -> ComposeResult:
         yield Banner(id="banner")
-        yield Horizontal(id="menu", classes="menu")
+        yield Grid(id="menu")
         for i, (label, _, _) in enumerate(OPTIONS):
             yield OptionBox(label, i)
         yield Static("", id="info")
@@ -232,4 +231,4 @@ class DCLSpamApp(App):
 
 if __name__ == "__main__":
     DCLSpamApp().run()
-        
+            
