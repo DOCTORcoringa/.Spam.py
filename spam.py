@@ -95,10 +95,11 @@ class DCLSpamApp(App):
         height: auto;
         padding: 1;
         border: round green;
-        layout: horizontal;
-        flex-wrap: wrap;
-        gap: 1 2;
-        justify-content: center;
+        layout: grid;
+        grid-columns: 3;
+        grid-rows: auto;
+        grid-gutter: 1 2;
+        justify-items: center;
     }
     OptionBox {
         border: round yellow;
@@ -138,6 +139,7 @@ class DCLSpamApp(App):
         height: 3;
         padding: 0 2;
         margin-top: 1;
+        width: 100%;
     }
     """
 
@@ -149,13 +151,12 @@ class DCLSpamApp(App):
 
     def compose(self) -> ComposeResult:
         yield Banner(id="banner")
-        with Horizontal(id="menu"):
-            for i, (label, _, _) in enumerate(OPTIONS):
-                box = OptionBox(label, i)
-                yield box
+        yield Horizontal(id="menu", classes="menu")
+        for i, (label, _, _) in enumerate(OPTIONS):
+            yield OptionBox(label, i)
         yield Static("", id="info")
         with Static(id="inputbox"):
-            yield Static("[b yellow]Valor para a escolha selecionada:[/b yellow]\n", id="input_label")
+            yield Static("[b yellow]Valor para a escolha selecionada:[/b yellow]\n")
             yield Input(placeholder="Digite aqui e pressione Enter...", id="input", disabled=True)
         yield ProgressBar(id="progressbar")
         yield Static("", id="message")
@@ -231,3 +232,4 @@ class DCLSpamApp(App):
 
 if __name__ == "__main__":
     DCLSpamApp().run()
+        
