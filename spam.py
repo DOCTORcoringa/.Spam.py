@@ -17,26 +17,24 @@ SPAM_OPTIONS = [
     ("Programado", "programado", "Permite programar o envio para Hoje ou Amanhã.")
 ]
 
-ALERTA_SOM = "/sdcard/alert.mp3"  # Caminho do som de alerta
-
 def gerar_menu(max_x):
-    largura = min(max_x - 2, 50)
-    if largura < 30:
-        largura = 30
+    largura = min(max_x - 4, 60)
+    if largura < 40:
+        largura = 40
     topo = "╔" + "═" * (largura - 2) + "╗"
     meio = "╠" + "═" * (largura - 2) + "╣"
     fundo = "╚" + "═" * (largura - 2) + "╝"
 
     linhas = [
         topo,
-        "║   📌 SPAM 📌   ".ljust(largura - 1) + "║",
-        "║ 🇱🇻 Doctor Coringa".ljust(largura - 1) + "║",
+        "║      📌 SPAM 📌      ".center(largura-2) + "║",
+        "║  🇱🇻 Doctor Coringa   ".center(largura-2) + "║",
         meio,
-        "║     PAINEL     ║",
+        "║       PAINEL         ".center(largura-2) + "║",
         meio
     ]
     for idx, (nome, _, _) in enumerate(SPAM_OPTIONS, 1):
-        linhas.append(f"║ {idx:2d}. {nome}".ljust(largura - 1) + "║")
+        linhas.append(f"║ {idx:2d}. {nome}".ljust(largura-1) + "║")
     linhas.append(fundo)
     return linhas
 
@@ -52,20 +50,14 @@ def validar_email(valor):
 def validar_link(valor):
     return valor.startswith("http://") or valor.startswith("https://")
 
-def pedir_entrada(stdscr, prompt, max_len=30, y_pos=0):
+def pedir_entrada(stdscr, prompt, y_pos=0, max_len=30):
     curses.echo()
-    stdscr.addstr(y_pos, 0, " " * 60)
+    stdscr.addstr(y_pos, 0, " " * 80)
     stdscr.addstr(y_pos, 0, prompt)
     stdscr.move(y_pos, len(prompt))
     entrada = stdscr.getstr(y_pos, len(prompt), max_len).decode().strip()
     curses.noecho()
     return entrada
-
-def tocar_alerta():
-    if os.path.exists(ALERTA_SOM):
-        os.system(f"termux-media-player play '{ALERTA_SOM}'")
-    else:
-        curses.beep()
 
 def aguardar_programado(stdscr):
     while True:
@@ -80,7 +72,6 @@ def aguardar_programado(stdscr):
 def enviar_spam(alvo, tipo_spam, qtd, stdscr):
     limpar_tela()
     stdscr.clear()
-    msg_aguarde_base = "Aguarde... Enviando spam "
     anim_frames = ["|", "/", "-", "\\"]
     max_y, max_x = stdscr.getmaxyx()
     largura_barra = max_x - 20
@@ -100,7 +91,7 @@ def enviar_spam(alvo, tipo_spam, qtd, stdscr):
         perc = int(progresso * 100)
         spinner = anim_frames[i % len(anim_frames)]
         linha_progresso = f"{i:03d}/{qtd:03d} {barra} {perc:3d}%"
-        linha_aguarde = f"{msg_aguarde_base}{spinner}"
+        linha_aguarde = f"Aguarde... {spinner}"
         try:
             stdscr.addstr(2, 0, linha_progresso[:max_x-1], curses.color_pair(1))
             stdscr.clrtoeol()
@@ -133,12 +124,12 @@ def main(stdscr):
         max_y, max_x = stdscr.getmaxyx()
         MENU_TEXT = gerar_menu(max_x)
         for i, line in enumerate(MENU_TEXT):
-            if i >= max_y - 6:  
+            if i >= max_y - 10:  
                 break
             stdscr.addstr(i, 0, line[:max_x-1])
 
         y_input = len(MENU_TEXT) + 1
-        stdscr.addstr(y_input, 0, "Digite a opção (1-10) ou Q para sair: ", curses.color_pair(4))
+        stdscr.addstr(y_input, 0, "Escolha a opção (1-10) ou Q para sair: ", curses.color_pair(4))
         stdscr.refresh()
         tecla = pedir_entrada(stdscr, "", y_pos=y_input)
 
@@ -154,7 +145,7 @@ def main(stdscr):
                 stdscr.addstr(0, 0, f"Você escolheu: {tipo_spam}")
                 stdscr.addstr(1, 0, descricao)
                 stdscr.refresh()
-                time.sleep(2)  # pequena pausa para leitura
+                time.sleep(2)
 
                 alvo = ""
                 while tipo_entrada != "programado":
