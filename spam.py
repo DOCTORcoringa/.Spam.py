@@ -17,14 +17,12 @@ SPAM_OPTIONS = [
     ("Programado", "texto")
 ]
 
-# Caminho do som de alerta no seu celular
-ALERTA_SOM = "/sdcard/alert.mp3"  # substitua pelo caminho do seu arquivo
+ALERTA_SOM = "/sdcard/alert.mp3"  # caminho do som de alerta
 
 def gerar_menu(max_x):
     largura = min(max_x - 2, 32)
     if largura < 20:
         largura = 20
-
     topo = "╔" + "═" * (largura - 2) + "╗"
     meio = "╠" + "═" * (largura - 2) + "╣"
     fundo = "╚" + "═" * (largura - 2) + "╝"
@@ -82,7 +80,7 @@ def tocar_alerta():
     if os.path.exists(ALERTA_SOM):
         os.system(f"termux-media-player play '{ALERTA_SOM}'")
     else:
-        curses.beep()  # fallback se arquivo não existir
+        curses.beep()
 
 def aguardar_hora(stdscr, hora_programada):
     spinner_frames = ["|", "/", "-", "\\"]
@@ -93,7 +91,7 @@ def aguardar_hora(stdscr, hora_programada):
         if agora >= hora_programada and not tocou_alerta:
             tocar_alerta()
             tocou_alerta = True
-            break  # sai do loop ou deixa continuar se quiser ver o tempo 0
+            break
         falta = (hora_programada - agora).total_seconds()
         if falta < 0:
             falta = 0
@@ -105,7 +103,6 @@ def aguardar_hora(stdscr, hora_programada):
         try:
             stdscr.addstr(max_y-4, 0, msg[:max_x-2], curses.color_pair(2))
             stdscr.clrtoeol()
-            # spinner no canto direito
             stdscr.addstr(max_y-4, max_x-2, spinner_frames[idx % len(spinner_frames)], curses.color_pair(3))
             stdscr.refresh()
         except curses.error:
@@ -118,18 +115,15 @@ def enviar_spam(alvo, tipo_spam, qtd, stdscr):
     stdscr.clear()
     msg_aguarde_base = "Aguarde... Enviando spam "
     anim_frames = ["|", "/", "-", "\\"]
-
     max_y, max_x = stdscr.getmaxyx()
     largura_barra = max_x - 20
     if largura_barra < 10:
         largura_barra = 10
-
     try:
         stdscr.addstr(0, 0, f"Enviando '{tipo_spam}' para '{alvo}' ({qtd} spam(s))..."[:max_x-1], curses.color_pair(2))
     except curses.error:
         pass
     stdscr.refresh()
-
     for i in range(1, qtd + 1):
         progresso = i / qtd
         chars_barras = int(progresso * largura_barra)
@@ -147,7 +141,6 @@ def enviar_spam(alvo, tipo_spam, qtd, stdscr):
         except curses.error:
             pass
         time.sleep(0.15)
-
     try:
         stdscr.addstr(6, 0, "✅ Envio concluído! Pressione qualquer tecla para voltar."[:max_x-1], curses.color_pair(4))
         stdscr.clrtoeol()
@@ -174,11 +167,10 @@ def main(stdscr):
                 if i >= max_y - 6:  
                     break
                 stdscr.addstr(i, 0, line[:max_x-1])
-            msg_instrucoes = "Digite o número da opção (1-10), ou Q para sair:"
             linha_instr = min(len(MENU_TEXT), max_y-2)
-            stdscr.addstr(linha_instr, 0, msg_instrucoes[:max_x-1], curses.color_pair(4))
+            stdscr.addstr(linha_instr, 0, "Digite o número da opção (1-10) ou Q para sair: "[:max_x-1], curses.color_pair(4))
             stdscr.refresh()
-            tecla = stdscr.getkey()
+            tecla = pedir_entrada(stdscr, "")
         except curses.error:
             tecla = ''
 
@@ -197,7 +189,7 @@ def main(stdscr):
                         stdscr.addstr(0, 0, f"Alvo para '{tipo_spam}': "[:max_x-1])
                     except curses.error:
                         pass
-                    alvo = pedir_entrada(stdscr, "", max_len=max_x-1)
+                    alvo = pedir_entrada(stdscr, "")
                     valido = False
                     if tipo_entrada == "numero":
                         valido = validar_numero(alvo)
@@ -225,7 +217,7 @@ def main(stdscr):
                         stdscr.addstr(0, 0, "Horário envio (HH:MM 24h): "[:max_x-1])
                     except curses.error:
                         pass
-                    hora_str = pedir_entrada(stdscr, "", max_len=max_x-1)
+                    hora_str = pedir_entrada(stdscr, "")
                     if validar_hora(hora_str):
                         hora_valida = True
                     else:
