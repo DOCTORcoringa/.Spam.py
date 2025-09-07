@@ -1,25 +1,8 @@
 🚀 Spam Panel - Termux
 
-
-
 Painel interativo de envio de mensagens via SMS, WhatsApp, Telegram e e-mails, diretamente no Termux.
 
 > ⚠️ Aviso Importante: Este painel não deve ser usado com números próprios ou de terceiros sem autorização. Seu uso é estritamente educacional e de teste.
-
-
-
-
----
-
-🏷️ Badges
-
-
-
-
-
-
-
----
 
 🎉 Tela de Boas-Vindas
 
@@ -37,9 +20,6 @@ Ao iniciar o painel, você verá algo assim no Termux:
 Select an option by entering its number:
 
 > 💡 A interface é clara, interativa e totalmente navegável via teclado, digitando apenas números.
-
-
-
 
 ---
 
@@ -106,9 +86,6 @@ textual → cria interface interativa no terminal.
 
 > ⚠️ No Termux moderno, não é necessário instalar pip separadamente.
 
-
-
-
 ---
 
 4️⃣ Clonar o repositório
@@ -116,7 +93,6 @@ textual → cria interface interativa no terminal.
 git clone https://github.com/DOCTORcoringa/.Spam.py
 
 Baixa todos os arquivos do painel para o Termux.
-
 
 
 ---
@@ -137,22 +113,7 @@ python3 spam.py
 
 Abre a interface interativa.
 
-Escolha as opções digitando apenas os números correspondentes.
-
-
-
----
-
-🎬 GIF Animado (Exemplo)
-
-Você pode adicionar um GIF animado mostrando o painel em ação. Exemplo:
-
-
-
-> 🔹 Substitua o GIF acima pelo seu próprio GIF real do Termux rodando o painel.
-
-
-
+Escolha as opções digitando apenas os números correspondentes
 
 ---
 
