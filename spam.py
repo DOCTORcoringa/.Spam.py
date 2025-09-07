@@ -1,8 +1,6 @@
 import curses
-import time
-import os
 import re
-from datetime import datetime, timedelta
+import time
 
 SPAM_OPTIONS = [
     ("SMS Básico", "numero", "Envia SMS para o número escolhido."),
@@ -17,29 +15,35 @@ SPAM_OPTIONS = [
     ("Programado", "programado", "Permite programar o envio para Hoje ou Amanhã.")
 ]
 
-def gerar_menu(max_x):
-    largura = min(max_x - 4, 60)
-    if largura < 40:
-        largura = 40
-    topo = "╔" + "═" * (largura - 2) + "╗"
-    meio = "╠" + "═" * (largura - 2) + "╣"
-    fundo = "╚" + "═" * (largura - 2) + "╝"
+def gerar_menu(max_y, max_x):
+    largura = max_x - 4
+    topo = "╔" + "═" * (largura-2) + "╗"
+    fundo = "╚" + "═" * (largura-2) + "╝"
+    meio = "╠" + "═" * (largura-2) + "╣"
 
     linhas = [
         topo,
-        "║      📌 SPAM 📌      ".center(largura-2) + "║",
-        "║  🇱🇻 Doctor Coringa   ".center(largura-2) + "║",
+        f"║{'📌 SPAM PAINEL AD4 📌'.center(largura-2)}║",
+        f"║{'🇱🇻 Doctor Coringa'.center(largura-2)}║",
         meio,
-        "║       PAINEL         ".center(largura-2) + "║",
+        f"║{'MENU PRINCIPAL'.center(largura-2)}║",
         meio
     ]
+
     for idx, (nome, _, _) in enumerate(SPAM_OPTIONS, 1):
         linhas.append(f"║ {idx:2d}. {nome}".ljust(largura-1) + "║")
+
     linhas.append(fundo)
     return linhas
 
-def limpar_tela():
-    os.system('clear' if os.name == 'posix' else 'cls')
+def pedir_entrada(stdscr, prompt, y_pos=0, x_pos=0, max_len=50):
+    curses.echo()
+    stdscr.addstr(y_pos, x_pos, " " * 100)
+    stdscr.addstr(y_pos, x_pos, prompt)
+    stdscr.move(y_pos, x_pos + len(prompt))
+    entrada = stdscr.getstr(y_pos, x_pos + len(prompt), max_len).decode().strip()
+    curses.noecho()
+    return entrada
 
 def validar_numero(valor):
     return valor.isdigit() and len(valor) >= 8
@@ -50,134 +54,77 @@ def validar_email(valor):
 def validar_link(valor):
     return valor.startswith("http://") or valor.startswith("https://")
 
-def pedir_entrada(stdscr, prompt, y_pos=0, max_len=30):
-    curses.echo()
-    stdscr.addstr(y_pos, 0, " " * 80)
-    stdscr.addstr(y_pos, 0, prompt)
-    stdscr.move(y_pos, len(prompt))
-    entrada = stdscr.getstr(y_pos, len(prompt), max_len).decode().strip()
-    curses.noecho()
-    return entrada
-
-def aguardar_programado(stdscr):
+def obter_valor(stdscr, tipo_entrada):
     while True:
-        escolha = pedir_entrada(stdscr, "Escolha Hoje (H) ou Amanhã (A): ", y_pos=16).lower()
-        if escolha in ["h", "a"]:
-            return escolha
-        else:
-            stdscr.addstr(17, 0, "Opção inválida! Digite H ou A.", curses.color_pair(2))
-            stdscr.refresh()
-            time.sleep(1.5)
+        entrada = pedir_entrada(stdscr, f"Digite o {tipo_entrada}: ", y_pos=10, x_pos=4)
+        if tipo_entrada == "número" and validar_numero(entrada):
+            return entrada
+        elif tipo_entrada == "email" and validar_email(entrada):
+            return entrada
+        elif tipo_entrada == "link" and validar_link(entrada):
+            return entrada
+        elif tipo_entrada == "texto" and len(entrada) > 0:
+            return entrada
+        elif tipo_entrada == "programado":
+            escolha = pedir_entrada(stdscr, "Programar para Hoje (H) ou Amanhã (A): ", y_pos=12, x_pos=4).lower()
+            if escolha in ["h", "a"]:
+                return "Hoje" if escolha == "h" else "Amanhã"
+        stdscr.addstr(14, 4, "Entrada inválida. Tente novamente.")
+        stdscr.refresh()
+        time.sleep(1.5)
+        stdscr.addstr(14, 4, " " * 50)
 
-def enviar_spam(alvo, tipo_spam, qtd, stdscr):
-    limpar_tela()
+def enviar(stdscr, opcao_idx, valor):
+    tipo_spam, _, descricao = SPAM_OPTIONS[opcao_idx]
     stdscr.clear()
-    anim_frames = ["|", "/", "-", "\\"]
-    max_y, max_x = stdscr.getmaxyx()
-    largura_barra = max_x - 20
-    if largura_barra < 10:
-        largura_barra = 10
-
-    try:
-        stdscr.addstr(0, 0, f"Enviando '{tipo_spam}' para '{alvo}' ({qtd} spam(s))..."[:max_x-1], curses.color_pair(2))
-    except curses.error:
-        pass
+    stdscr.addstr(2, 4, f"Opção escolhida: {tipo_spam}")
+    stdscr.addstr(4, 4, descricao)
+    stdscr.addstr(6, 4, f"Enviando para: {valor} ...")
     stdscr.refresh()
 
-    for i in range(1, qtd + 1):
-        progresso = i / qtd
-        chars_barras = int(progresso * largura_barra)
-        barra = "[" + "#" * chars_barras + "-" * (largura_barra - chars_barras) + "]"
-        perc = int(progresso * 100)
-        spinner = anim_frames[i % len(anim_frames)]
-        linha_progresso = f"{i:03d}/{qtd:03d} {barra} {perc:3d}%"
-        linha_aguarde = f"Aguarde... {spinner}"
-        try:
-            stdscr.addstr(2, 0, linha_progresso[:max_x-1], curses.color_pair(1))
-            stdscr.clrtoeol()
-            stdscr.addstr(4, 0, linha_aguarde[:max_x-1], curses.color_pair(3))
-            stdscr.clrtoeol()
-            stdscr.refresh()
-        except curses.error:
-            pass
-        time.sleep(0.15)
-
-    try:
-        stdscr.addstr(6, 0, "✅ Envio concluído! Pressione qualquer tecla para voltar."[:max_x-1], curses.color_pair(4))
-        stdscr.clrtoeol()
+    for i in range(1, 61):
+        barra = "#" * i
+        stdscr.addstr(8, 4, f"[{barra:<60}] {i*100//60:3d}%")
         stdscr.refresh()
-    except curses.error:
-        pass
+        time.sleep(0.03)
+
+    stdscr.addstr(10, 4, "✅ Envio concluído! Pressione qualquer tecla para voltar ao menu.")
+    stdscr.refresh()
     stdscr.getch()
 
-def main(stdscr):
-    curses.curs_set(0)
-    curses.start_color()
-    curses.use_default_colors()
-    curses.init_pair(1, curses.COLOR_CYAN, -1)
-    curses.init_pair(2, curses.COLOR_YELLOW, -1)
-    curses.init_pair(3, curses.COLOR_MAGENTA, -1)
-    curses.init_pair(4, curses.COLOR_GREEN, -1)
-
+def mostrar_menu(stdscr):
+    curses.curs_set(1)
     while True:
         stdscr.clear()
         max_y, max_x = stdscr.getmaxyx()
-        MENU_TEXT = gerar_menu(max_x)
-        for i, line in enumerate(MENU_TEXT):
-            if i >= max_y - 10:  
-                break
-            stdscr.addstr(i, 0, line[:max_x-1])
+        menu_text = gerar_menu(max_y, max_x)
+        start_y = max(0, (max_y - len(menu_text)) // 2)
 
-        y_input = len(MENU_TEXT) + 1
-        stdscr.addstr(y_input, 0, "Escolha a opção (1-10) ou Q para sair: ", curses.color_pair(4))
-        stdscr.refresh()
-        tecla = pedir_entrada(stdscr, "", y_pos=y_input)
+        for i, line in enumerate(menu_text):
+            if start_y + i < max_y - 1:
+                stdscr.addstr(start_y + i, 2, line[:max_x-4])
 
-        if tecla.lower() == 'q':
+        input_y = start_y + len(menu_text) + 1
+        escolha = pedir_entrada(stdscr, "Escolha a opção: ", y_pos=input_y, x_pos=4)
+
+        if escolha.lower() == 'q':
             break
 
-        if tecla.isdigit():
-            opcao = int(tecla)
+        if escolha.isdigit():
+            opcao = int(escolha)
             if 1 <= opcao <= 10:
-                tipo_spam, tipo_entrada, descricao = SPAM_OPTIONS[opcao -1]
-
-                stdscr.clear()
-                stdscr.addstr(0, 0, f"Você escolheu: {tipo_spam}")
-                stdscr.addstr(1, 0, descricao)
-                stdscr.refresh()
-                time.sleep(2)
-
-                alvo = ""
-                while tipo_entrada != "programado":
-                    stdscr.clear()
-                    stdscr.addstr(0, 0, f"Alvo para '{tipo_spam}': ")
-                    alvo = pedir_entrada(stdscr, "", y_pos=1)
-                    valido = False
-                    if tipo_entrada == "numero":
-                        valido = validar_numero(alvo)
-                    elif tipo_entrada == "email":
-                        valido = validar_email(alvo)
-                    elif tipo_entrada == "link":
-                        valido = validar_link(alvo)
-                    else:
-                        valido = len(alvo) > 0
-
-                    if not valido:
-                        stdscr.addstr(2, 0, "Entrada inválida! Tente novamente.", curses.color_pair(2))
-                        stdscr.refresh()
-                        time.sleep(1.5)
-                    else:
-                        break
-
-                if tipo_entrada == "programado":
-                    escolha_dia = aguardar_programado(stdscr)
-                    alvo = f"Programado para {'Hoje' if escolha_dia=='h' else 'Amanhã'}"
-
-                enviar_spam(alvo, tipo_spam, 60, stdscr)
-        else:
-            stdscr.addstr(max_y-2, 0, "Opção inválida! Digite 1 a 10 ou Q para sair.", curses.color_pair(2))
-            stdscr.refresh()
-            time.sleep(1.5)
+                tipo_spam, tipo_entrada, _ = SPAM_OPTIONS[opcao-1]
+                if tipo_entrada == "numero":
+                    valor = obter_valor(stdscr, "número")
+                elif tipo_entrada == "email":
+                    valor = obter_valor(stdscr, "email")
+                elif tipo_entrada == "link":
+                    valor = obter_valor(stdscr, "link")
+                elif tipo_entrada == "programado":
+                    valor = obter_valor(stdscr, "programado")
+                else:
+                    valor = obter_valor(stdscr, "texto")
+                enviar(stdscr, opcao-1, valor)
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    curses.wrapper(mostrar_menu)
